@@ -22,4 +22,11 @@
         android:gravity="center_vertical"
         android:paddingLeft="10dp"
         android:id="@+id/artist_name_text_view"/>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical"
+        android:paddingLeft="10dp"
+        android:id="@+id/artist_id_text_view"
+        android:visibility="gone"/>
 </LinearLayout>
