@@ -25,7 +25,7 @@
             android:layout_weight="1"
             android:text="Song name goes here..."
             android:paddingLeft="10dp"
-            android:id="@+id/song_name_text_view"
+            android:id="@+id/track_name_text_view"
             android:gravity="bottom"
             android:textSize="18dp"
             />

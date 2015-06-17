@@ -1,6 +1,7 @@
 package com.example.android.spotify1;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
@@ -35,9 +36,10 @@ import kaaes.spotify.webapi.android.models.ArtistsPager;
 public class MainActivityFragment extends Fragment {
 
     public static String TAG = MainActivityFragment.class.getName();
-    private ArtistsPager mArtistPager;
     private List<ArtistListItem> mArtistsList;
     ArrayAdapter<ArtistListItem> mAdapter;
+    private EditText mSearchEditText;
+    private String mSearchText;
 
     public MainActivityFragment() {
     }
@@ -48,7 +50,7 @@ public class MainActivityFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_main, container, false);
 
-        final EditText searchEditText = (EditText) view.findViewById(R.id.search_edit_text);
+        mSearchEditText = (EditText) view.findViewById(R.id.search_edit_text);
 
 
         mArtistsList = new ArrayList<>();
@@ -56,7 +58,7 @@ public class MainActivityFragment extends Fragment {
         ListView searchResultsListView = (ListView) view.findViewById(R.id.results_list_view);
         searchResultsListView.setAdapter(mAdapter);
 
-        searchEditText.addTextChangedListener(new TextWatcher() {
+        mSearchEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -69,9 +71,10 @@ public class MainActivityFragment extends Fragment {
 
             @Override
             public void afterTextChanged(Editable s) {
-                if (searchEditText.getText().length() > 0) {
+                if (mSearchEditText.getText().length() > 2) {
                     FetchArtistsTask artistsTask = new FetchArtistsTask();
-                    artistsTask.execute(searchEditText.getText().toString());
+                    mSearchText = mSearchEditText.getText().toString();
+                    artistsTask.execute(mSearchText);
                 } else {
                     mAdapter.clear();
                 }
@@ -82,10 +85,21 @@ public class MainActivityFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
+                ArtistListItem item = mAdapter.getItem(position);
+                Intent topTenIntent = new Intent(getActivity().getBaseContext(), TopTenActivity.class);
+                topTenIntent.putExtra("artistId", item.getArtistId());
+                topTenIntent.putExtra("artistName", item.getArtistName());
+                getActivity().startActivity(topTenIntent);
             }
         });
 
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mSearchEditText.setText(mSearchText);
     }
 
     public class FetchArtistsTask extends AsyncTask<String, Void, ArtistsPager>{
@@ -97,12 +111,6 @@ public class MainActivityFragment extends Fragment {
                 SpotifyApi api = new SpotifyApi();
                 SpotifyService spotify = api.getService();
                 ArtistsPager results = spotify.searchArtists(params[0]);
-
-//                mArtistsList.clear();
-//
-//                for(Artist artist : results.artists.items){
-//                    mArtistsList.add(new ArtistListItem(artist.id, artist.name, null));
-//                }
 
                 return results;
             } catch (Exception ex){
@@ -117,7 +125,13 @@ public class MainActivityFragment extends Fragment {
         protected void onPostExecute(ArtistsPager artistsPager) {
             super.onPostExecute(artistsPager);
 
-            for (Artist artist : artistsPager.artists.items){
+            mAdapter.clear();
+
+            if (artistsPager == null) {
+                return;
+            }
+
+            for (Artist artist : artistsPager.artists.items) {
                 String imageUri;
                 try {
                     imageUri = artist.images.get(2).url;
@@ -139,13 +153,15 @@ public class MainActivityFragment extends Fragment {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             View itemView = convertView;
-            if (itemView == null){
+            if (itemView == null) {
                 itemView = LayoutInflater.from(mContext).inflate(R.layout.artists_list_item, parent, false);
             }
             ArtistListItem current = mArtistsList.get(position);
             ImageView imageView = (ImageView) itemView.findViewById(R.id.artist_thumb_nail);
 
-            Picasso.with(mContext).load(current.getImageUri()).resize(60, 60).into(imageView);
+            if (current.getImageUri() != null) {
+                Picasso.with(mContext).load(current.getImageUri()).resize(60, 60).into(imageView);
+            }
 
             TextView artistTextView = (TextView) itemView.findViewById(R.id.artist_name_text_view);
             artistTextView.setText(current.getArtistName());
