@@ -6,4 +6,6 @@
 
     <string name="search_hint">Search</string>
     <string name="title_activity_main">Spotify Streamer</string>
+    <string name="artists_not_found">Artists not found!!!</string>
+    <string name="tracks_not_found">Tracks not found!!!</string>
 </resources>

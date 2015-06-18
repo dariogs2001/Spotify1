@@ -15,7 +15,9 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.example.android.spotify1.utils.NamesIds;
 import com.example.android.spotify1.utils.TopTenListItem;
 import com.squareup.picasso.Picasso;
 
@@ -56,8 +58,8 @@ public class TopTenActivityFragment extends Fragment {
         searchResultsListView.setAdapter(mAdapter);
 
         Intent intent = getActivity().getIntent();
-        String artistId = intent.getStringExtra("artistId");
-        mArtistName = intent.getStringExtra("artistName");
+        String artistId = intent.getStringExtra(NamesIds.ARTIST_ID);
+        mArtistName = intent.getStringExtra(NamesIds.ARTIST_NAME);
 
         FetchTopTenTask task = new FetchTopTenTask();
         task.execute(artistId);
@@ -83,7 +85,7 @@ public class TopTenActivityFragment extends Fragment {
                 SpotifyApi api = new SpotifyApi();
                 SpotifyService spotify = api.getService();
                 Map<String, Object> mapParameters = new HashMap<String, Object>();
-                mapParameters.put("country", "US");
+                mapParameters.put(NamesIds.COUNTRY_PARAMETER, NamesIds.COUNTRY_ID);
                 Tracks results = spotify.getArtistTopTrack(params[0], mapParameters);
 
                 return results;
@@ -101,7 +103,8 @@ public class TopTenActivityFragment extends Fragment {
 
             mAdapter.clear();
 
-            if (topTenTracks == null) {
+            if (topTenTracks == null || topTenTracks.tracks == null || topTenTracks.tracks.size() == 0) {
+                Toast.makeText(getActivity().getApplicationContext(), getString(R.string.tracks_not_found), Toast.LENGTH_SHORT).show();
                 return;
             }
 

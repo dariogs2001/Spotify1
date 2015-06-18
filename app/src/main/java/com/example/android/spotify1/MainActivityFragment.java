@@ -17,8 +17,10 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.android.spotify1.utils.ArtistListItem;
+import com.example.android.spotify1.utils.NamesIds;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -36,6 +38,7 @@ import kaaes.spotify.webapi.android.models.ArtistsPager;
 public class MainActivityFragment extends Fragment {
 
     public static String TAG = MainActivityFragment.class.getName();
+    public static final String STATE_SEARCH = "state:search";
     private List<ArtistListItem> mArtistsList;
     ArrayAdapter<ArtistListItem> mAdapter;
     private EditText mSearchEditText;
@@ -71,7 +74,7 @@ public class MainActivityFragment extends Fragment {
 
             @Override
             public void afterTextChanged(Editable s) {
-                if (mSearchEditText.getText().length() > 2) {
+                if (mSearchEditText.getText().length() > 0) {
                     FetchArtistsTask artistsTask = new FetchArtistsTask();
                     mSearchText = mSearchEditText.getText().toString();
                     artistsTask.execute(mSearchText);
@@ -87,8 +90,8 @@ public class MainActivityFragment extends Fragment {
 
                 ArtistListItem item = mAdapter.getItem(position);
                 Intent topTenIntent = new Intent(getActivity().getBaseContext(), TopTenActivity.class);
-                topTenIntent.putExtra("artistId", item.getArtistId());
-                topTenIntent.putExtra("artistName", item.getArtistName());
+                topTenIntent.putExtra(NamesIds.ARTIST_ID, item.getArtistId());
+                topTenIntent.putExtra(NamesIds.ARTIST_NAME, item.getArtistName());
                 getActivity().startActivity(topTenIntent);
             }
         });
@@ -100,6 +103,18 @@ public class MainActivityFragment extends Fragment {
     public void onResume() {
         super.onResume();
         mSearchEditText.setText(mSearchText);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putString("search_text", mSearchText);
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
     }
 
     public class FetchArtistsTask extends AsyncTask<String, Void, ArtistsPager>{
@@ -127,7 +142,8 @@ public class MainActivityFragment extends Fragment {
 
             mAdapter.clear();
 
-            if (artistsPager == null) {
+            if (artistsPager == null || artistsPager.artists == null || artistsPager.artists.items == null || artistsPager.artists.items.size() == 0) {
+                Toast.makeText(getActivity().getApplicationContext(), getString(R.string.artists_not_found), Toast.LENGTH_SHORT).show();
                 return;
             }
 
