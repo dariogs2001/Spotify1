@@ -119,7 +119,7 @@ public class MainActivityFragment extends Fragment {
         super.onSaveInstanceState(outState);
 
         //This seems to not be working in some cases an in some of my emulatores, works when rotating the screen but not when coming back from a different intent.
-        outState.putString("search_text", mSearchText);
+        outState.putString(NamesIds.SEARCH_TEXT, mSearchText);
 
     }
 
