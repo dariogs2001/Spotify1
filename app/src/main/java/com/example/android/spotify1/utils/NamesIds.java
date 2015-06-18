@@ -10,4 +10,7 @@ public class NamesIds {
 
     public static final String COUNTRY_PARAMETER = "country";
     public static final String COUNTRY_ID = "US";
+
+    public static final String SAHRED_PREFERENCES = "SpotifyShared";
+    public static final String SEARCH_TEXT = "search_text";
 }

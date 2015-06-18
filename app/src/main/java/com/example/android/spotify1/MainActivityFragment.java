@@ -2,6 +2,7 @@ package com.example.android.spotify1;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
@@ -96,20 +97,30 @@ public class MainActivityFragment extends Fragment {
             }
         });
 
+        SharedPreferences sp = getActivity().getSharedPreferences(NamesIds.SAHRED_PREFERENCES, Context.MODE_PRIVATE);
+        mSearchEditText.setText(sp.getString(NamesIds.SEARCH_TEXT, ""));
+
         return view;
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        mSearchEditText.setText(mSearchText);
+    public void onPause() {
+        super.onPause();
+        //So I also decided to save it on SharePreferences...
+        //with this even when the app is closed the last search string will be saved.
+        SharedPreferences sp = getActivity().getSharedPreferences(NamesIds.SAHRED_PREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences.Editor edit =  sp.edit();
+        edit.putString(NamesIds.SEARCH_TEXT, mSearchText);
+        edit.commit();
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
+        //This seems to not be working in some cases an in some of my emulatores, works when rotating the screen but not when coming back from a different intent.
         outState.putString("search_text", mSearchText);
+
     }
 
     @Override
