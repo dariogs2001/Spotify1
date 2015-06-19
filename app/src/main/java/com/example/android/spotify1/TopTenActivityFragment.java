@@ -3,6 +3,7 @@ package com.example.android.spotify1;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
@@ -40,7 +41,7 @@ public class TopTenActivityFragment extends Fragment {
 
     public static String TAG = TopTenActivity.class.getName();
 
-    private List<TopTenListItem> mTopTenList;
+    private ArrayList<TopTenListItem> mTopTenList;
     ArrayAdapter<TopTenListItem> mAdapter;
     private String mArtistName;
 
@@ -57,14 +58,34 @@ public class TopTenActivityFragment extends Fragment {
         ListView searchResultsListView = (ListView) view.findViewById(R.id.top_ten_list_view);
         searchResultsListView.setAdapter(mAdapter);
 
-        Intent intent = getActivity().getIntent();
-        String artistId = intent.getStringExtra(NamesIds.ARTIST_ID);
-        mArtistName = intent.getStringExtra(NamesIds.ARTIST_NAME);
+        if (savedInstanceState != null && savedInstanceState.containsKey(NamesIds.TOP_TEN_LIST)) {
+            mTopTenList = savedInstanceState.getParcelableArrayList(NamesIds.TOP_TEN_LIST);
+            loadAdapter(mTopTenList, mAdapter);
+        }
+        else {
+            Intent intent = getActivity().getIntent();
+            String artistId = intent.getStringExtra(NamesIds.ARTIST_ID);
+            mArtistName = intent.getStringExtra(NamesIds.ARTIST_NAME);
 
-        FetchTopTenTask task = new FetchTopTenTask();
-        task.execute(artistId);
+            FetchTopTenTask task = new FetchTopTenTask();
+            task.execute(artistId);
+        }
 
         return view;
+    }
+
+    private void loadAdapter(final List<TopTenListItem> mTopTenList, final ArrayAdapter<TopTenListItem> mAdapter) {
+        for (TopTenListItem item : mTopTenList) {
+            String imageUriSmall;
+            String imageUriLarge;
+            try {
+                imageUriSmall = item.getSmallImage();
+                imageUriLarge = item.getLargeImage();
+            }catch (Exception ex){
+                imageUriLarge = imageUriSmall = null;
+            }
+            mAdapter.add(new TopTenListItem(item.getTrackName() , item.getAlbumName(), imageUriLarge, imageUriSmall, item.getUrlStream()));
+        }
     }
 
     @Override
@@ -74,6 +95,12 @@ public class TopTenActivityFragment extends Fragment {
         if (actionBar != null) {
             actionBar.setSubtitle(mArtistName);
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(final Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList(NamesIds.TOP_TEN_LIST, mTopTenList);
     }
 
     public class FetchTopTenTask extends AsyncTask<String, Void, Tracks> {
@@ -104,7 +131,7 @@ public class TopTenActivityFragment extends Fragment {
             mAdapter.clear();
 
             if (topTenTracks == null || topTenTracks.tracks == null || topTenTracks.tracks.size() == 0) {
-                Toast.makeText(getActivity().getApplicationContext(), getString(R.string.tracks_not_found), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), getString(R.string.tracks_not_found), Toast.LENGTH_SHORT).show();
                 return;
             }
 

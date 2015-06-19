@@ -1,12 +1,21 @@
 package com.example.android.spotify1.utils;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Created by Dario on 6/16/2015.
  */
-public class ArtistListItem {
+public class ArtistListItem implements Parcelable {
     String mArtistName;
     String mArtistId;
     String mImageUri;
+
+    protected ArtistListItem(Parcel in) {
+        mArtistName = in.readString();
+        mArtistId = in.readString();
+        mImageUri = in.readString();
+    }
 
     public String getArtistId() {
         return mArtistId;
@@ -37,4 +46,28 @@ public class ArtistListItem {
         mArtistName = artistName;
         mImageUri = imageUri;
     }
- }
+
+    public static final Creator<ArtistListItem> CREATOR = new Creator<ArtistListItem>() {
+        @Override
+        public ArtistListItem createFromParcel(Parcel in) {
+            return new ArtistListItem(in);
+        }
+
+        @Override
+        public ArtistListItem[] newArray(int size) {
+            return new ArtistListItem[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(final Parcel dest, final int flags) {
+        dest.writeString(mArtistName);
+        dest.writeString(mArtistId);
+        dest.writeString(mImageUri);
+    }
+}

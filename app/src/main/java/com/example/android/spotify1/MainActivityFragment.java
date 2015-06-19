@@ -17,6 +17,7 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,11 +40,13 @@ import kaaes.spotify.webapi.android.models.ArtistsPager;
 public class MainActivityFragment extends Fragment {
 
     public static String TAG = MainActivityFragment.class.getName();
-    public static final String STATE_SEARCH = "state:search";
-    private List<ArtistListItem> mArtistsList;
+
+    private ArrayList<ArtistListItem> mArtistsList;
     ArrayAdapter<ArtistListItem> mAdapter;
     private EditText mSearchEditText;
     private String mSearchText;
+
+    private android.support.v7.widget.SearchView mSearchView;
 
     public MainActivityFragment() {
     }
@@ -54,7 +57,8 @@ public class MainActivityFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_main, container, false);
 
-        mSearchEditText = (EditText) view.findViewById(R.id.search_edit_text);
+//        mSearchEditText = (EditText) view.findViewById(R.id.search_edit_text);
+        mSearchView = (android.support.v7.widget.SearchView) view.findViewById(R.id.search_artist);
 
 
         mArtistsList = new ArrayList<>();
@@ -62,28 +66,47 @@ public class MainActivityFragment extends Fragment {
         ListView searchResultsListView = (ListView) view.findViewById(R.id.results_list_view);
         searchResultsListView.setAdapter(mAdapter);
 
-        mSearchEditText.addTextChangedListener(new TextWatcher() {
+        mSearchView.setOnQueryTextListener(new android.support.v7.widget.SearchView.OnQueryTextListener() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                if (mSearchEditText.getText().length() > 0) {
+            public boolean onQueryTextSubmit(final String query) {
+                if (query.length() > 0) {
                     FetchArtistsTask artistsTask = new FetchArtistsTask();
-                    mSearchText = mSearchEditText.getText().toString();
+                    mSearchText = query;
                     artistsTask.execute(mSearchText);
                 } else {
                     mAdapter.clear();
                 }
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(final String newText) {
+                return false;
             }
         });
+
+//        mSearchEditText.addTextChangedListener(new TextWatcher() {
+//            @Override
+//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+//
+//            }
+//
+//            @Override
+//            public void onTextChanged(CharSequence s, int start, int before, int count) {
+//
+//            }
+//
+//            @Override
+//            public void afterTextChanged(Editable s) {
+//                if (mSearchEditText.getText().length() > 0) {
+//                    FetchArtistsTask artistsTask = new FetchArtistsTask();
+//                    mSearchText = mSearchEditText.getText().toString();
+//                    artistsTask.execute(mSearchText);
+//                } else {
+//                    mAdapter.clear();
+//                }
+//            }
+//        });
 
         searchResultsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -97,10 +120,28 @@ public class MainActivityFragment extends Fragment {
             }
         });
 
-        SharedPreferences sp = getActivity().getSharedPreferences(NamesIds.SAHRED_PREFERENCES, Context.MODE_PRIVATE);
-        mSearchEditText.setText(sp.getString(NamesIds.SEARCH_TEXT, ""));
+        if (savedInstanceState != null && savedInstanceState.containsKey(NamesIds.SEARCH_RESULT_LIST)) {
+            mArtistsList = savedInstanceState.getParcelableArrayList(NamesIds.TOP_TEN_LIST);
+            loadAdapter(mArtistsList, mAdapter);
+        }
+        else {
+            SharedPreferences sp = getActivity().getSharedPreferences(NamesIds.SAHRED_PREFERENCES, Context.MODE_PRIVATE);
+            mSearchView.setQuery(sp.getString(NamesIds.SEARCH_TEXT, ""), true);
+        }
 
         return view;
+    }
+
+    private void loadAdapter(final ArrayList<ArtistListItem> mArtistsList, final ArrayAdapter<ArtistListItem> mAdapter) {
+        for (ArtistListItem item : mArtistsList) {
+            String imageUri;
+            try {
+                imageUri = item.getImageUri();
+            }catch (Exception ex){
+                imageUri = null;
+            }
+            mAdapter.add(new ArtistListItem(item.getArtistId(), item.getArtistName(), imageUri));
+        }
     }
 
     @Override
@@ -121,6 +162,7 @@ public class MainActivityFragment extends Fragment {
         //This seems to not be working in some cases an in some of my emulatores, works when rotating the screen but not when coming back from a different intent.
         outState.putString(NamesIds.SEARCH_TEXT, mSearchText);
 
+        outState.putParcelableArrayList(NamesIds.SEARCH_RESULT_LIST, mArtistsList);
     }
 
     @Override
