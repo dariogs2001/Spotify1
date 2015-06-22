@@ -10,21 +10,21 @@
               tools:context=".MainActivityFragment"
               android:orientation="vertical">
 
-    <!--<EditText-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:id="@+id/search_edit_text"-->
-        <!--android:hint="@string/search_hint"-->
-        <!--android:freezesText="true"/>-->
-    <!-- -->
-
-    <android.support.v7.widget.SearchView
+    <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="text"
-        app:iconifiedByDefault="false"
-        app:queryHint="@string/search_hint"
-        android:id="@+id/search_artist"/>
+        android:id="@+id/search_edit_text"
+        android:hint="@string/search_hint"
+        android:freezesText="true"/>
+
+
+    <!--<android.support.v7.widget.SearchView-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:inputType="text"-->
+        <!--app:iconifiedByDefault="false"-->
+        <!--app:queryHint="@string/search_hint"-->
+        <!--android:id="@+id/search_artist"/>-->
 
     <ListView
         android:layout_width="match_parent"

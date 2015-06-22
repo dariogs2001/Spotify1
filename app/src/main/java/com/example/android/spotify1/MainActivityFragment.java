@@ -46,7 +46,7 @@ public class MainActivityFragment extends Fragment {
     private EditText mSearchEditText;
     private String mSearchText;
 
-    private android.support.v7.widget.SearchView mSearchView;
+//    private android.support.v7.widget.SearchView mSearchView;
 
     public MainActivityFragment() {
     }
@@ -57,56 +57,34 @@ public class MainActivityFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_main, container, false);
 
-//        mSearchEditText = (EditText) view.findViewById(R.id.search_edit_text);
-        mSearchView = (android.support.v7.widget.SearchView) view.findViewById(R.id.search_artist);
+        mSearchEditText = (EditText) view.findViewById(R.id.search_edit_text);
+//        mSearchView = (android.support.v7.widget.SearchView) view.findViewById(R.id.search_artist);
 
 
         mArtistsList = new ArrayList<>();
         mAdapter = new ArtistAdapterList(this.getActivity(), R.layout.artists_list_item);
         ListView searchResultsListView = (ListView) view.findViewById(R.id.results_list_view);
         searchResultsListView.setAdapter(mAdapter);
-
-        mSearchView.setOnQueryTextListener(new android.support.v7.widget.SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(final String query) {
-                if (query.length() > 0) {
-                    FetchArtistsTask artistsTask = new FetchArtistsTask();
-                    mSearchText = query;
-                    artistsTask.execute(mSearchText);
-                } else {
-                    mAdapter.clear();
-                }
-                return true;
-            }
-
-            @Override
-            public boolean onQueryTextChange(final String newText) {
-                return false;
-            }
-        });
-
-//        mSearchEditText.addTextChangedListener(new TextWatcher() {
+//
+//        mSearchView.setOnQueryTextListener(new android.support.v7.widget.SearchView.OnQueryTextListener() {
 //            @Override
-//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-//
-//            }
-//
-//            @Override
-//            public void onTextChanged(CharSequence s, int start, int before, int count) {
-//
-//            }
-//
-//            @Override
-//            public void afterTextChanged(Editable s) {
-//                if (mSearchEditText.getText().length() > 0) {
+//            public boolean onQueryTextSubmit(final String query) {
+//                if (query.length() > 0) {
 //                    FetchArtistsTask artistsTask = new FetchArtistsTask();
-//                    mSearchText = mSearchEditText.getText().toString();
+//                    mSearchText = query;
 //                    artistsTask.execute(mSearchText);
 //                } else {
 //                    mAdapter.clear();
 //                }
+//                return true;
+//            }
+//
+//            @Override
+//            public boolean onQueryTextChange(final String newText) {
+//                return false;
 //            }
 //        });
+
 
         searchResultsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -121,18 +99,24 @@ public class MainActivityFragment extends Fragment {
         });
 
         if (savedInstanceState != null && savedInstanceState.containsKey(NamesIds.SEARCH_RESULT_LIST)) {
-            mArtistsList = savedInstanceState.getParcelableArrayList(NamesIds.TOP_TEN_LIST);
+            mArtistsList = savedInstanceState.getParcelableArrayList(NamesIds.SEARCH_RESULT_LIST);
             loadAdapter(mArtistsList, mAdapter);
         }
         else {
             SharedPreferences sp = getActivity().getSharedPreferences(NamesIds.SAHRED_PREFERENCES, Context.MODE_PRIVATE);
-            mSearchView.setQuery(sp.getString(NamesIds.SEARCH_TEXT, ""), true);
+            mSearchText = sp.getString(NamesIds.SEARCH_TEXT, "");
+            if (mSearchText.length() > 0) {
+//                mSearchView.setQuery(mSearchText, true);
+                FetchArtistsTask artistsTask = new FetchArtistsTask();
+                artistsTask.execute(mSearchText);
+            }
         }
 
         return view;
     }
 
     private void loadAdapter(final ArrayList<ArtistListItem> mArtistsList, final ArrayAdapter<ArtistListItem> mAdapter) {
+        mAdapter.clear();
         for (ArtistListItem item : mArtistsList) {
             String imageUri;
             try {
@@ -142,6 +126,37 @@ public class MainActivityFragment extends Fragment {
             }
             mAdapter.add(new ArtistListItem(item.getArtistId(), item.getArtistName(), imageUri));
         }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if (mSearchEditText == null) return;
+
+        mSearchEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (mSearchEditText.getText().length() > 0) {
+                    FetchArtistsTask artistsTask = new FetchArtistsTask();
+                    mSearchText = mSearchEditText.getText().toString();
+                    artistsTask.execute(mSearchText);
+                } else {
+                    mAdapter.clear();
+                }
+            }
+        });
+
     }
 
     @Override
@@ -159,15 +174,10 @@ public class MainActivityFragment extends Fragment {
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        //This seems to not be working in some cases an in some of my emulatores, works when rotating the screen but not when coming back from a different intent.
+        //This seems to not be working in some cases an in some of my emulators, works when rotating the screen but not when coming back from a different intent.
         outState.putString(NamesIds.SEARCH_TEXT, mSearchText);
 
         outState.putParcelableArrayList(NamesIds.SEARCH_RESULT_LIST, mArtistsList);
-    }
-
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
     }
 
     public class FetchArtistsTask extends AsyncTask<String, Void, ArtistsPager>{
@@ -184,7 +194,6 @@ public class MainActivityFragment extends Fragment {
             } catch (Exception ex){
 
                 Log.e(TAG, "Error calling Spotify Web API", ex);
-
                 return null;
             }
         }
@@ -192,22 +201,27 @@ public class MainActivityFragment extends Fragment {
         @Override
         protected void onPostExecute(ArtistsPager artistsPager) {
             super.onPostExecute(artistsPager);
+            try {
+                mAdapter.clear();
 
-            mAdapter.clear();
-
-            if (artistsPager == null || artistsPager.artists == null || artistsPager.artists.items == null || artistsPager.artists.items.size() == 0) {
-                Toast.makeText(getActivity().getApplicationContext(), getString(R.string.artists_not_found), Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            for (Artist artist : artistsPager.artists.items) {
-                String imageUri;
-                try {
-                    imageUri = artist.images.get(2).url;
-                }catch (Exception ex){
-                    imageUri = null;
+                if (artistsPager == null || artistsPager.artists == null || artistsPager.artists.items == null || artistsPager.artists.items.size() == 0) {
+                    Toast.makeText(getActivity().getApplicationContext(), getString(R.string.artists_not_found), Toast.LENGTH_SHORT).show();
+                    return;
                 }
-                mAdapter.add(new ArtistListItem(artist.id, artist.name, imageUri));
+
+                for (Artist artist : artistsPager.artists.items) {
+                    String imageUri;
+                    try {
+                        imageUri = artist.images.get(2).url;
+                    } catch (Exception ex) {
+                        imageUri = null;
+                    }
+                    mAdapter.add(new ArtistListItem(artist.id, artist.name, imageUri));
+                }
+            } catch (Exception ex) {
+
+                Log.e(TAG, "Error on onPostExecute", ex);
+                return;
             }
         }
     }
@@ -221,24 +235,36 @@ public class MainActivityFragment extends Fragment {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            View itemView = convertView;
-            if (itemView == null) {
-                itemView = LayoutInflater.from(mContext).inflate(R.layout.artists_list_item, parent, false);
+            try {
+
+                View itemView = convertView;
+                if (itemView == null) {
+                    itemView = LayoutInflater.from(mContext).inflate(R.layout.artists_list_item, parent, false);
+                }
+
+                if (mArtistsList == null) {
+                    return null;
+                }
+
+                ArtistListItem current = mArtistsList.get(position);
+                ImageView imageView = (ImageView) itemView.findViewById(R.id.artist_thumb_nail);
+
+                if (current.getImageUri() != null) {
+                    Picasso.with(mContext).load(current.getImageUri()).resize(60, 60).into(imageView);
+                }
+
+                TextView artistTextView = (TextView) itemView.findViewById(R.id.artist_name_text_view);
+                artistTextView.setText(current.getArtistName());
+
+                TextView idTextView = (TextView) itemView.findViewById(R.id.artist_id_text_view);
+                idTextView.setText(current.getArtistId());
+
+                return itemView;
             }
-            ArtistListItem current = mArtistsList.get(position);
-            ImageView imageView = (ImageView) itemView.findViewById(R.id.artist_thumb_nail);
-
-            if (current.getImageUri() != null) {
-                Picasso.with(mContext).load(current.getImageUri()).resize(60, 60).into(imageView);
+            catch (Exception ex) {
+                Log.e(TAG, "Error on getView", ex);
+                return null;
             }
-
-            TextView artistTextView = (TextView) itemView.findViewById(R.id.artist_name_text_view);
-            artistTextView.setText(current.getArtistName());
-
-            TextView idTextView = (TextView) itemView.findViewById(R.id.artist_id_text_view);
-            idTextView.setText(current.getArtistId());
-
-            return itemView;
         }
     }
 }

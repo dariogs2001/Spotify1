@@ -75,6 +75,7 @@ public class TopTenActivityFragment extends Fragment {
     }
 
     private void loadAdapter(final List<TopTenListItem> mTopTenList, final ArrayAdapter<TopTenListItem> mAdapter) {
+        mAdapter.clear();
         for (TopTenListItem item : mTopTenList) {
             String imageUriSmall;
             String imageUriLarge;
