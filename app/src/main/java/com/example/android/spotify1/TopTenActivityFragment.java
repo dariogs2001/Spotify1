@@ -20,6 +20,7 @@ import android.widget.Toast;
 
 import com.example.android.spotify1.utils.NamesIds;
 import com.example.android.spotify1.utils.TopTenListItem;
+import com.example.android.spotify1.utils.Utils;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -61,6 +62,10 @@ public class TopTenActivityFragment extends Fragment {
         if (savedInstanceState != null && savedInstanceState.containsKey(NamesIds.TOP_TEN_LIST)) {
             mTopTenList = savedInstanceState.getParcelableArrayList(NamesIds.TOP_TEN_LIST);
             loadAdapter(mTopTenList, mAdapter);
+
+            if (savedInstanceState.containsKey(NamesIds.ARTIST_NAME)) {
+                mArtistName = savedInstanceState.getString(NamesIds.ARTIST_NAME);
+            }
         }
         else {
             Intent intent = getActivity().getIntent();
@@ -102,6 +107,7 @@ public class TopTenActivityFragment extends Fragment {
     public void onSaveInstanceState(final Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelableArrayList(NamesIds.TOP_TEN_LIST, mTopTenList);
+        outState.putString(NamesIds.ARTIST_NAME, mArtistName);
     }
 
     public class FetchTopTenTask extends AsyncTask<String, Void, Tracks> {
@@ -130,6 +136,11 @@ public class TopTenActivityFragment extends Fragment {
             super.onPostExecute(topTenTracks);
 
             mAdapter.clear();
+
+            if (!Utils.isInternetConextion(getActivity())) {
+                Toast.makeText(getActivity(), getString(R.string.no_internet_connection), Toast.LENGTH_SHORT).show();
+                return;
+            }
 
             if (topTenTracks == null || topTenTracks.tracks == null || topTenTracks.tracks.size() == 0) {
                 Toast.makeText(getActivity(), getString(R.string.tracks_not_found), Toast.LENGTH_SHORT).show();

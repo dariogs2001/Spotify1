@@ -23,10 +23,13 @@ import android.widget.Toast;
 
 import com.example.android.spotify1.utils.ArtistListItem;
 import com.example.android.spotify1.utils.NamesIds;
+import com.example.android.spotify1.utils.Utils;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.xml.parsers.FactoryConfigurationError;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
@@ -105,6 +108,7 @@ public class MainActivityFragment extends Fragment {
         else {
             SharedPreferences sp = getActivity().getSharedPreferences(NamesIds.SAHRED_PREFERENCES, Context.MODE_PRIVATE);
             mSearchText = sp.getString(NamesIds.SEARCH_TEXT, "");
+            mSearchEditText.setText(mSearchText);
             if (mSearchText.length() > 0) {
 //                mSearchView.setQuery(mSearchText, true);
                 FetchArtistsTask artistsTask = new FetchArtistsTask();
@@ -180,8 +184,7 @@ public class MainActivityFragment extends Fragment {
         outState.putParcelableArrayList(NamesIds.SEARCH_RESULT_LIST, mArtistsList);
     }
 
-    public class FetchArtistsTask extends AsyncTask<String, Void, ArtistsPager>{
-
+    public class FetchArtistsTask extends AsyncTask<String, Void, ArtistsPager> {
         @Override
         protected ArtistsPager doInBackground(String... params) {
 
@@ -204,8 +207,13 @@ public class MainActivityFragment extends Fragment {
             try {
                 mAdapter.clear();
 
+                if (!Utils.isInternetConextion(getActivity())) {
+                    Toast.makeText(getActivity(), getString(R.string.no_internet_connection), Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 if (artistsPager == null || artistsPager.artists == null || artistsPager.artists.items == null || artistsPager.artists.items.size() == 0) {
-                    Toast.makeText(getActivity().getApplicationContext(), getString(R.string.artists_not_found), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), getString(R.string.artists_not_found), Toast.LENGTH_SHORT).show();
                     return;
                 }
 
