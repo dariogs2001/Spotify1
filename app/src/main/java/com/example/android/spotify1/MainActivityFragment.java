@@ -17,7 +17,6 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,7 +25,6 @@ import com.example.android.spotify1.utils.NamesIds;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
@@ -103,7 +101,7 @@ public class MainActivityFragment extends Fragment {
             loadAdapter(mArtistsList, mAdapter);
         }
         else {
-            SharedPreferences sp = getActivity().getSharedPreferences(NamesIds.SAHRED_PREFERENCES, Context.MODE_PRIVATE);
+            SharedPreferences sp = getActivity().getSharedPreferences(NamesIds.SHARED_PREFERENCES, Context.MODE_PRIVATE);
             mSearchText = sp.getString(NamesIds.SEARCH_TEXT, "");
             if (mSearchText.length() > 0) {
 //                mSearchView.setQuery(mSearchText, true);
@@ -164,7 +162,7 @@ public class MainActivityFragment extends Fragment {
         super.onPause();
         //So I also decided to save it on SharePreferences...
         //with this even when the app is closed the last search string will be saved.
-        SharedPreferences sp = getActivity().getSharedPreferences(NamesIds.SAHRED_PREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences sp = getActivity().getSharedPreferences(NamesIds.SHARED_PREFERENCES, Context.MODE_PRIVATE);
         SharedPreferences.Editor edit =  sp.edit();
         edit.putString(NamesIds.SEARCH_TEXT, mSearchText);
         edit.commit();

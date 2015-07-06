@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -57,6 +58,16 @@ public class TopTenActivityFragment extends Fragment {
         mAdapter = new TopTenAdapterList(this.getActivity(), R.layout.top_ten_list_item);
         ListView searchResultsListView = (ListView) view.findViewById(R.id.top_ten_list_view);
         searchResultsListView.setAdapter(mAdapter);
+
+        searchResultsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Intent mediaIntent = new Intent(getActivity().getBaseContext(), MediaPlayer.class);
+                mediaIntent.putExtra(NamesIds.LIST_POSITION, position);
+                mediaIntent.putExtra(NamesIds.LIST_MEDIA, mTopTenList);
+                startActivity(mediaIntent);
+            }
+        });
 
         if (savedInstanceState != null && savedInstanceState.containsKey(NamesIds.TOP_TEN_LIST)) {
             mTopTenList = savedInstanceState.getParcelableArrayList(NamesIds.TOP_TEN_LIST);
